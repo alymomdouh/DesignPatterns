@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-Creational_Design_Patterns", "1-Creational_Design_Patterns", "{8D06AB54-7FBB-49E3-A14E-1BB9E01E2495}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2-Structural_Design_Patterns", "2-Structural_Design_Patterns", "{26F6B58E-5558-479A-B4F2-BA6DA34D86AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3-Behavioral_Design_Patterns", "3-Behavioral_Design_Patterns", "{F2426C0A-07CD-4A70-BA80-5141C932747C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2-PrototypeDesignPattern", "2-PrototypeDesignPattern", "{3F7AAA20-D734-4638-8BC8-5A5F820CEC4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrototypeDesignPattern", "1-CreationalDesignPatterns\2-PrototypeDesignPattern\PrototypeDesignPattern.csproj", "{39500EA8-73AD-44D5-A0AE-5BCD690ABE70}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39500EA8-73AD-44D5-A0AE-5BCD690ABE70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39500EA8-73AD-44D5-A0AE-5BCD690ABE70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39500EA8-73AD-44D5-A0AE-5BCD690ABE70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39500EA8-73AD-44D5-A0AE-5BCD690ABE70}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3F7AAA20-D734-4638-8BC8-5A5F820CEC4C} = {8D06AB54-7FBB-49E3-A14E-1BB9E01E2495}
+		{39500EA8-73AD-44D5-A0AE-5BCD690ABE70} = {3F7AAA20-D734-4638-8BC8-5A5F820CEC4C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CFB5A828-465F-4F2E-A1A5-74F173A1DD83}
+	EndGlobalSection
+EndGlobal
