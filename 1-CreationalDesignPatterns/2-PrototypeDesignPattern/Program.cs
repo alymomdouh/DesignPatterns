@@ -42,6 +42,7 @@ namespace PrototypeDesignPattern
             Console.WriteLine(tempEmp3.ToString());
             #endregion
             Console.ReadKey();
+            Console.WriteLine("test");
         }
     }
 }
