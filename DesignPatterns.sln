@@ -1,13 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31729.503
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1-Creational_Design_Patterns", "1-Creational_Design_Patterns", "{8D06AB54-7FBB-49E3-A14E-1BB9E01E2495}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2-Structural_Design_Patterns", "2-Structural_Design_Patterns", "{26F6B58E-5558-479A-B4F2-BA6DA34D86AB}"
+	ProjectSection(SolutionItems) = preProject
+		willAdd.txt = willAdd.txt
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3-Behavioral_Design_Patterns", "3-Behavioral_Design_Patterns", "{F2426C0A-07CD-4A70-BA80-5141C932747C}"
+	ProjectSection(SolutionItems) = preProject
+		TextFile1.txt = TextFile1.txt
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2-PrototypeDesignPattern", "2-PrototypeDesignPattern", "{3F7AAA20-D734-4638-8BC8-5A5F820CEC4C}"
 EndProject
