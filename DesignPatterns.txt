@@ -1,0 +1,89 @@
+
+Design Patterns
+in general are reusable solutions to common problems in software design. 
+They are not finished designs that can be transformed directly into code, but rather templates for how to solve problems in a way that can be reused in many different situations.
+
+why should we learn design patterns?
+1. They provide a standard terminology and are a common language for developers to communicate.
+2. They can speed up the development process by providing tested, proven development paradigms.
+3. They can improve code readability for coders and architects who are familiar with the patterns.
+4. They can make code more flexible and reusable.
+5. They can help to prevent subtle issues that can cause major problems and improve code robustness.
+6. They can help to reduce the overall complexity of the code.
+7. They can help to improve the maintainability of the code.
+8. They can help to improve the scalability of the code.
+9. They can help to improve the performance of the code.
+10. They can help to improve the security of the code.
+11. They can help to improve the testability of the code.
+12. They can help to improve the portability of the code.
+13. They can help to improve the interoperability of the code.
+14. They can help to improve the usability of the code.
+15. They can help to improve the accessibility of the code.
+16. They can help to improve the reliability of the code.
+17. They can help to improve the availability of the code.
+18. They can help to improve the maintainability of the code.
+19. They can help to improve the scalability of the code.
+20. They can help to improve the performance of the code.
+21. They can help to improve the security of the code.
+22. They can help to improve the testability of the code.
+23. They can help to improve the portability of the code.
+24. They can help to improve the interoperability of the code.
+25. They can help to improve the usability of the code.
+26. They can help to improve the accessibility of the code.
+27. They can help to improve the reliability of the code.
+28. They can help to improve the availability of the code.
+
+
+how should we learn design patterns?
+1. Start with the basics: Understand the fundamental concepts of design patterns, including what they are, why they are used, and the different types of design patterns.
+2. Study the Gang of Four (GoF) patterns: The GoF patterns are the foundation of design patterns and provide a solid understanding of the most common design patterns used in software development.
+3. Practice implementing design patterns: The best way to learn design patterns is to practice implementing them in your own projects. Start with simple examples and gradually move on to more complex scenarios.
+4. Read books and articles: There are many books and articles available on design patterns that can help you deepen your understanding of the subject. Some popular books include "Design Patterns: Elements of Reusable Object-Oriented Software" by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides (the Gang of Four), and "Head First Design Patterns" by Eric Freeman and Bert Bates.
+5. Join online communities: There are many online communities and forums where you can discuss design patterns with other developers, ask questions, and share your experiences.
+6. Attend workshops and conferences: Attending workshops and conferences can provide you with valuable insights and knowledge from experts in the field of design patterns.
+7. Experiment with different programming languages: Design patterns can be applied in many different programming languages, so experimenting with different languages can help you understand how design patterns can be implemented in different contexts.
+8. Analyze existing code: Look at existing codebases and try to identify the design patterns used in them. This can help you understand how design patterns are applied in real-world scenarios.
+9. Collaborate with other developers: Working with other developers can help you learn from their experiences and gain new perspectives on design patterns.
+10. Keep up with the latest trends: Design patterns are constantly evolving, so it's important to stay up-to-date with the latest trends and best practices in the field.
+1. Creational Patterns
+	   - Singleton
+	   - Factory Method
+	   - Abstract Factory
+	   - Builder
+	   - Prototype
+ 2. Structural Patterns
+	   - Adapter
+	   - Bridge
+	   - Composite
+	   - Decorator
+	   - Facade
+	   - Flyweight
+	   - Proxy
+ 3. Behavioral Patterns 
+	   - Chain of Responsibility
+	
+
+what makes up a design pattern?
+	   - Command
+	   - Interpreter
+	   - Iterator
+	   - Mediator
+	   - Memento
+	   - Observer
+	   - State
+	   - Strategy
+	   - Template Method
+	   - Visitor
+
+when should we apply design patterns?
+1. When you are facing a common problem that has been solved before.
+2. When you want to improve the maintainability and scalability of your code.
+3. When you want to improve the readability and understandability of your code.
+4. When you want to improve the performance and efficiency of your code.
+5. When you want to improve the security and reliability of your code.
+6. When you want to improve the testability and portability of your code.
+7. When you want to improve the interoperability and usability of your code.
+8. When you want to improve the accessibility and availability of your code.
+9. When you want to improve the flexibility and reusability of your code.
+
+ardalis/kata-catalog
