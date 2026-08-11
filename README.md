@@ -15,9 +15,10 @@
  They are not ready-made code, but rather templates or best practices for structuring classes and objects.
 
 Think of them as:
-
+```
 - Algorithms solve coding problems.
 - Design Patterns solve design problems.
+```
 
 ## What Categories of Design Patterns
 
@@ -29,6 +30,52 @@ The Gang of Four (GoF) patterns are divided into 3 categories:
 Concerned with relationships between classes.
 ####  3. Behavioral Patterns
 Concerned with communication between objects.
+----------------------------------------------
+###  Design patterns can be harmful when they are used just because they exist, 
+rather than because they solve a real problem
+
+##### 1. Overengineering
+
+A simple problem can become unnecessarily complicated.
+The code may technically follow "good practices," but it's much harder to understand and maintain.
+
+#### Rule: Don't add a pattern until you have a problem that justifies it.
+
+
+##### 2. Pattern overuse
+
+Patterns are often recognizable structures, so developers may try to apply them everywhere.
+
+For example, using the Singleton pattern for every service:
+
+##### 3. Making code harder to understand
+
+A pattern can add abstractions that don't provide enough value.
+
+##### 4. Wrong pattern for the problem
+
+Choosing the wrong pattern can create more problems than it solves.
+
+For example, using Observer when you only need a simple method call can introduce:
+
+##### 5. Premature abstraction
+
+This is probably one of the biggest dangers.
+If you don't have a real reason for the abstraction, the interface may just add another layer.
+
+A useful principle is:
+
+#####  Don't abstract based on what might happen. Abstract based on what is actually happening.
+
+##### 6. Patterns can hide bad architecture
+
+A project can contain lots of patterns and still have terrible architecture.
+doesn't automatically mean the system is well designed.
+
+You can have Clean Architecture + 20 design patterns + terrible business logic.
+
+Patterns are tools, not proof of good architecture.
+
 
 -------------------------------------------
 ##  1. Creational Patterns
