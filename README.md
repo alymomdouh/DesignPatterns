@@ -81,27 +81,87 @@ Patterns are tools, not proof of good architecture.
 ##  1. Creational Patterns
 ###  1.1 Prototype
 
-	Is a creational design pattern that allows you to create new objects by copying (cloning) an existing object instead of creating them from scratch.
 
-	It's useful when:
+بدل ما تنشئ Object جديد من الصفر باستخدام new كل مرة، تقوم بعمل نسخة (Clone) من Object موجود بالفعل.
+
+###  1.2 Simple Factory 
+
+Simple Factory هو أسلوب بسيط لإنشاء الـ Objects، ويُستخدم عندما تريد وضع منطق إنشاء الـ Object في مكان واحد بدل توزيع new في كل مكان.
+
+ملاحظة: Simple Factory ليس Design Pattern رسميًا من GoF، لكنه أسلوب شائع جدًا ويُعتبر مقدمة ممتازة لفهم Factory Method و Abstract Factory.
+
+|           | Simple Factory    | Prototype          |
+| --------- | ----------------- | ------------------ |
+| الهدف     | إنشاء Object      | نسخ Object         |
+| الطريقة   | `Create()`        | `Clone()`          |
+| يعتمد على | نوع الـ Object    | Object موجود       |
+| مثال      | `Create("email")` | `employee.Clone()` |
+| Category  | Creational        | Creational         |
 
 
- - Creating an object is expensive or complex.
- - You need many similar objects with slight modifications.
- - You want to avoid repeating initialization logic.
+###  1.3 Factory Method
 
-####  Prototype Structure
+Factory Method هو Design Pattern من نوع Creational، وفكرته الأساسية:
 
-The Prototype pattern usually consists of:
+بدل أن يكون الـ Client مسؤولًا عن اختيار وإنشاء الـ Object باستخدام new، نجعل الـ Factory نفسها هي التي تحدد أي Object سيتم إنشاؤه.
 
-- 1-Prototype Interface
-  
-Declares a clone method.
+وهو أكثر مرونة من Simple Factory.
+|                | Simple Factory     | Factory Method      |
+| -------------- | ------------------ | ------------------- |
+| Factory        | واحدة              | عدة Factories       |
+| الاختيار       | `if/switch` غالبًا | Polymorphism        |
+| إنشاء Object   | Factory واحدة      | Subclass            |
+| إضافة نوع جديد | تعديل Factory      | إضافة Factory جديدة |
+| OCP            | أقل التزامًا       | أفضل                |
+| التعقيد        | أبسط               | أكثر                |
+| مناسب          | مشاريع صغيرة       | أنظمة قابلة للتوسع  |
 
-- 2-Concrete Prototype
- 
-Implements cloning logic.
+احفظ الفرق بهذه الجملة:
 
-- 3-Client
+Simple Factory:
 
-Uses the prototype to create new objects.
+"أديني النوع وأنا هعمل لك الـ Object."
+```
+Factory.Create("Visa");
+```
+Factory Method:
+
+"أنا Factory متخصصة في نوع معين، وأنا اللي هحدد الـ Object."
+```
+new VisaPaymentFactory()
+    .CreatePayment();
+```
+والنقطة المهمة جدًا: Factory Method لا تعني مجرد أن عندك Method اسمها Create()؛ المقصود أن الـ creation method تكون قابلة للتخصيص/override بواسطة subclasses.
+
+###  1.4 Abstract Factory
+
+Abstract Factory هو Design Pattern من نوع Creational، وفكرته:
+
+إنشاء عائلة من الـ Objects المرتبطة ببعضها بدون أن يكون الـ Client مسؤولًا عن معرفة الـ concrete classes التي يتم إنشاؤها.
+يعني بدل ما يكون عندك Factory تنشئ Object واحد، يكون عندك Factory تنشئ مجموعة Objects متوافقة مع بعضها.
+
+طريقة سهلة لحفظهم
+
+Simple Factory
+
+"اختار لي Object."
+```
+Create("Visa")
+```
+Factory Method
+
+"الـ Factory المتخصصة هي التي تحدد الـ Object."
+```
+VisaFactory → VisaPayment
+```
+Abstract Factory
+
+"أعطني مجموعة Objects متوافقة مع بعضها."
+```
+WindowsFactory
+   ↓
+Button + Checkbox + TextBox
+```
+
+
+
