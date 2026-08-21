@@ -165,4 +165,12 @@ Button + Checkbox + TextBox
 
 ###  1.5 Builder
 
+الـ Builder Pattern هو أحد Creational Design Patterns، وفكرته الأساسية:
+
+فصل عملية بناء Object معقد عن الـ Object نفسه، بحيث تستطيع إنشاء نفس الـ Object بطرق أو configurations مختلفة.
+
+ببساطة: بدل Constructor ضخم فيه parameters كثيرة، تستخدم Builder لبناء الـ Object خطوة بخطوة.
+
+Builder Pattern يسمح لك بإنشاء Object معقد خطوة بخطوة، مع فصل منطق البناء عن الـ Object النهائي.
+
 
