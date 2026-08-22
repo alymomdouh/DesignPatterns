@@ -174,3 +174,11 @@ Button + Checkbox + TextBox
 Builder Pattern يسمح لك بإنشاء Object معقد خطوة بخطوة، مع فصل منطق البناء عن الـ Object النهائي.
 
 
+###  1.5 Singleton
+
+
+الـ Singleton Pattern هو أحد Creational Design Patterns، وفكرته الأساسية:
+
+ضمان أن يكون هناك Instance واحد فقط من Class طوال فترة تشغيل التطبيق، مع توفير طريقة للوصول إليه.
+
+
