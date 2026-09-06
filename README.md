@@ -1465,5 +1465,284 @@ Menu
 > **الـ Composite يسمح ببناء Tree من Objects، والتعامل مع الـ Object المفرد والمجموعة من Objects بنفس الـ Interface.**
 
  
- 
+ ###  2.4   Facade Pattern  
+
+
+**Facade = واجهة مبسطة**
+
+الـ Facade يوفر **واجهة واحدة بسيطة** للتعامل مع System معقد يحتوي على عدة Classes وعمليات.
+
+بدل ما الـ Client يتعامل مع:
+
+```text
+Service A
+Service B
+Service C
+Service D
+Service E
+```
+
+نعطيه:
+
+```text
+        Facade
+          ↓
+   ┌──────┼──────┐
+   ↓      ↓      ↓
+Service A B      C
+```
+
+يعني:
+
+> **Facade hides the complexity of a subsystem and provides a simple interface to the client.**
+
+---
+
+# مثال واقعي: تشغيل الكمبيوتر
+
+تخيل أنك تريد تشغيل الكمبيوتر.
+
+داخليًا ممكن يحصل:
+
+```text
+CPU.Start()
+Memory.Load()
+HardDrive.Read()
+OS.Load()
+Display.Start()
+```
+
+لكن أنت كمستخدم تريد:
+
+```csharp
+computer.Start();
+```
+
+هنا `ComputerFacade` يخفي كل التعقيد.
+
+---
+
+# مثال C#
+
+عندنا عدة Classes:
+
+```csharp
+public class CPU
+{
+    public void Start()
+    {
+        Console.WriteLine("CPU Started");
+    }
+}
+```
+
+```csharp
+public class Memory
+{
+    public void Load()
+    {
+        Console.WriteLine("Memory Loaded");
+    }
+}
+```
+
+```csharp
+public class HardDrive
+{
+    public void Read()
+    {
+        Console.WriteLine("Hard Drive Read");
+    }
+}
+```
+
+لو الـ Client تعامل معهم مباشرة:
+
+```csharp
+var cpu = new CPU();
+var memory = new Memory();
+var hardDrive = new HardDrive();
+
+cpu.Start();
+memory.Load();
+hardDrive.Read();
+```
+
+الـ Client أصبح يعرف تفاصيل كثيرة.
+
+---
+
+# نستخدم Facade
+
+نعمل:
+
+```csharp
+public class ComputerFacade
+{
+    private readonly CPU _cpu;
+    private readonly Memory _memory;
+    private readonly HardDrive _hardDrive;
+
+    public ComputerFacade()
+    {
+        _cpu = new CPU();
+        _memory = new Memory();
+        _hardDrive = new HardDrive();
+    }
+
+    public void Start()
+    {
+        _cpu.Start();
+        _memory.Load();
+        _hardDrive.Read();
+    }
+}
+```
+
+الآن الـ Client:
+
+```csharp
+var computer = new ComputerFacade();
+
+computer.Start();
+```
+
+بدلاً من:
+
+```text
+CPU
+Memory
+HardDrive
+```
+
+يتعامل فقط مع:
+
+```text
+ComputerFacade
+```
+
+---
+
+# الشكل
+
+```text
+                 Client
+                   │
+                   ▼
+          ┌─────────────────┐
+          │     Facade      │
+          │                 │
+          │    Start()      │
+          └────────┬────────┘
+                   │
+          ┌────────┼────────┐
+          ▼        ▼        ▼
+        CPU      Memory   HardDrive
+```
+
+الـ Facade لا يلغي الـ Classes الموجودة.
+
+هو فقط:
+
+> **يخفي تعقيدها عن الـ Client.**
+
+---
+
+# مثال أقرب للـ .NET
+
+تخيل عندك عملية إنشاء Order.
+
+العملية تحتاج:
+
+```text
+OrderService
+PaymentService
+InventoryService
+EmailService
+ShippingService
+```
+
+بدون Facade:
+
+```csharp
+orderService.Create();
+
+paymentService.Pay();
+
+inventoryService.Reserve();
+
+shippingService.CreateShipment();
+
+emailService.SendConfirmation();
+```
+
+الـ Controller أصبح يعرف تفاصيل كثيرة.
+
+بدلاً من ذلك:
+
+```csharp
+public class OrderFacade
+{
+    private readonly OrderService _order;
+    private readonly PaymentService _payment;
+    private readonly InventoryService _inventory;
+    private readonly ShippingService _shipping;
+    private readonly EmailService _email;
+
+    public async Task PlaceOrder()
+    {
+        _order.Create();
+
+        _payment.Pay();
+
+        _inventory.Reserve();
+
+        _shipping.CreateShipment();
+
+        _email.SendConfirmation();
+    }
+}
+```
+
+والـ Controller:
+
+```csharp
+await _orderFacade.PlaceOrder();
+```
+
+وهكذا أصبح الـ Controller لا يهتم بتفاصيل العملية.
+
+---
+
+# Facade لا يمنعك من الوصول للـ Subsystems
+
+هذه نقطة مهمة.
+
+الـ Facade **ليس Adapter** ولا يقوم بإجبارك على استخدامه.
+
+يمكن أن يكون عندك:
+
+```text
+Client
+ ├──────────────→ Facade
+ │                  ↓
+ │             Subsystems
+ │
+ └──────────────→ Subsystem مباشرة
+```
+
+لكن الـ Facade يوفر الطريقة الأسهل للتعامل مع النظام.
+
+---
+
+> **Facade = Make a complex system simple**
+
+---
+
+
+> **Facade is a structural design pattern that provides a simple and unified interface to a complex subsystem, hiding its internal complexity from the client.**
+
+ودي أهم فكرة فيه: **Facade لا يجعل النظام أبسط من الداخل؛ هو يجعل التعامل معه أبسط من الخارج.**
+
+
 
