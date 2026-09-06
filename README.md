@@ -2678,3 +2678,479 @@ Request → Handler → Handler → Handler → ... → Handler
 
  
  ###  3.2   Strategy Pattern 
+ أكيد. **Strategy Pattern** من أهم الـ **Behavioral Design Patterns**، وخصوصًا في C# لأنه يظهر كثيرًا في تصميم الـ Services والـ Business Logic.
+
+ 
+> عندك **أكثر من طريقة لتنفيذ نفس العملية**، وتريد أن تجعل كل طريقة مستقلة ويمكن تبديلها بدون تغيير الكود الذي يستخدمها.
+
+بدل ما يكون عندك:
+
+```csharp
+if (type == "CreditCard")
+{
+    // طريقة 1
+}
+else if (type == "PayPal")
+{
+    // طريقة 2
+}
+else if (type == "Bank")
+{
+    // طريقة 3
+}
+```
+
+نحوّل كل طريقة إلى **Strategy مستقلة**.
+
+---
+
+# مثال: طرق الدفع
+
+عندنا عملية:
+
+```text
+Pay
+```
+
+لكن عندنا طرق مختلفة:
+
+```text
+Credit Card
+PayPal
+Bank Transfer
+```
+
+كل واحدة لها طريقة مختلفة لتنفيذ الدفع.
+
+نبدأ بعمل Interface:
+
+```csharp
+public interface IPaymentStrategy
+{
+    void Pay(decimal amount);
+}
+```
+
+---
+
+## Strategy 1 — Credit Card
+
+```csharp
+public class CreditCardPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine(
+            $"Paid {amount} using Credit Card");
+    }
+}
+```
+
+---
+
+## Strategy 2 — PayPal
+
+```csharp
+public class PayPalPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine(
+            $"Paid {amount} using PayPal");
+    }
+}
+```
+
+---
+
+## Strategy 3 — Bank Transfer
+
+```csharp
+public class BankTransferPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine(
+            $"Paid {amount} using Bank Transfer");
+    }
+}
+```
+
+الآن عندنا:
+
+```text
+        IPaymentStrategy
+              ▲
+       ┌──────┼───────┐
+       │      │       │
+ CreditCard PayPal   Bank
+```
+
+---
+
+# الـ Context
+
+نحتاج Class يستخدم الـ Strategy.
+
+```csharp
+public class PaymentContext
+{
+    private readonly IPaymentStrategy _strategy;
+
+    public PaymentContext(IPaymentStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void Pay(decimal amount)
+    {
+        _strategy.Pay(amount);
+    }
+}
+```
+
+الآن:
+
+```csharp
+var payment = new PaymentContext(
+    new CreditCardPayment());
+
+payment.Pay(1000);
+```
+
+الناتج:
+
+```text
+Paid 1000 using Credit Card
+```
+
+لو أردنا PayPal:
+
+```csharp
+var payment = new PaymentContext(
+    new PayPalPayment());
+
+payment.Pay(1000);
+```
+
+الناتج:
+
+```text
+Paid 1000 using PayPal
+```
+
+لاحظ أننا **لم نغير `PaymentContext`**.
+
+---
+
+# الفكرة الأساسية
+
+عندنا:
+
+```text
+                    Context
+                       │
+                       ▼
+                IPaymentStrategy
+                       ▲
+              ┌────────┼────────┐
+              │        │        │
+          CreditCard  PayPal   Bank
+```
+
+الـ Context لا يعرف تفاصيل طريقة الدفع.
+
+هو يعرف فقط:
+
+```csharp
+IPaymentStrategy
+```
+
+---
+
+# لماذا Strategy أفضل من if/else؟
+
+بدون Strategy:
+
+```csharp
+public void Pay(string type, decimal amount)
+{
+    if (type == "CreditCard")
+    {
+        // Credit Card logic
+    }
+    else if (type == "PayPal")
+    {
+        // PayPal logic
+    }
+    else if (type == "Bank")
+    {
+        // Bank logic
+    }
+}
+```
+
+كلما أضفت طريقة جديدة، ستعدل نفس الـ Class.
+
+مثلاً:
+
+```text
+Credit Card
+PayPal
+Bank
+Apple Pay
+Fawry
+Wallet
+```
+
+سيصبح الـ `if/else` كبيرًا جدًا.
+
+---
+
+## باستخدام Strategy
+
+كل طريقة مستقلة:
+
+```text
+CreditCardPayment
+PayPalPayment
+BankPayment
+ApplePayPayment
+FawryPayment
+```
+
+وكلها:
+
+```csharp
+IPaymentStrategy
+```
+
+لو أردت إضافة:
+
+```text
+Vodafone Cash
+```
+
+تعمل فقط:
+
+```csharp
+public class VodafoneCashPayment : IPaymentStrategy
+{
+    public void Pay(decimal amount)
+    {
+        // Vodafone Cash logic
+    }
+}
+```
+
+ولا تحتاج إلى تعديل الـ Strategies الموجودة.
+
+---
+
+# مثال مهم في .NET
+
+تخيل أنك تعمل **Discount System**.
+
+عندك:
+
+```text
+Regular Customer
+VIP Customer
+Employee
+Black Friday
+```
+
+كل واحد له طريقة مختلفة لحساب الخصم.
+
+نعمل:
+
+```csharp
+public interface IDiscountStrategy
+{
+    decimal CalculateDiscount(decimal price);
+}
+```
+
+Regular:
+
+```csharp
+public class RegularDiscount : IDiscountStrategy
+{
+    public decimal CalculateDiscount(decimal price)
+    {
+        return price * 0.05m;
+    }
+}
+```
+
+VIP:
+
+```csharp
+public class VipDiscount : IDiscountStrategy
+{
+    public decimal CalculateDiscount(decimal price)
+    {
+        return price * 0.20m;
+    }
+}
+```
+
+Employee:
+
+```csharp
+public class EmployeeDiscount : IDiscountStrategy
+{
+    public decimal CalculateDiscount(decimal price)
+    {
+        return price * 0.30m;
+    }
+}
+```
+
+ثم:
+
+```csharp
+public class DiscountService
+{
+    private readonly IDiscountStrategy _strategy;
+
+    public DiscountService(IDiscountStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public decimal GetDiscount(decimal price)
+    {
+        return _strategy.CalculateDiscount(price);
+    }
+}
+```
+
+الاستخدام:
+
+```csharp
+var service = new DiscountService(
+    new VipDiscount());
+
+var discount = service.GetDiscount(1000);
+```
+
+النتيجة:
+
+```text
+200
+```
+
+---
+
+# Strategy وعلاقتها بـ Dependency Injection
+
+في .NET يمكن أن تستخدم **Dependency Injection** لاختيار الـ Strategy.
+
+مثلاً:
+
+```csharp
+public class OrderService
+{
+    private readonly IPaymentStrategy _paymentStrategy;
+
+    public OrderService(IPaymentStrategy paymentStrategy)
+    {
+        _paymentStrategy = paymentStrategy;
+    }
+}
+```
+
+ثم الـ DI Container يحدد الـ implementation المناسب.
+
+وهذا يجعل Strategy Pattern مناسبًا جدًا مع تطبيقات ASP.NET Core.
+
+---
+
+# Strategy vs Chain of Responsibility
+
+بما أننا شرحنا Chain of Responsibility قبله، الفرق مهم جدًا.
+
+## Strategy
+
+أنت تختار **Strategy واحدة**:
+
+```text
+             Payment
+                ↓
+        Choose ONE Strategy
+          ↙      ↓      ↘
+      Card     PayPal    Bank
+```
+
+مثلاً:
+
+```text
+Payment → PayPal
+```
+
+---
+
+## Chain of Responsibility
+
+الـ Request يمر على **عدة Handlers**:
+
+```text
+Request
+   ↓
+Handler A
+   ↓
+Handler B
+   ↓
+Handler C
+```
+
+كل Handler يقرر:
+
+```text
+أعالجه؟
+  ↓
+Yes → Handle
+No  → Next
+```
+
+### باختصار:
+
+```text
+Strategy
+→ Choose ONE algorithm
+
+Chain of Responsibility
+→ Pass request through handlers
+```
+
+---
+ 
+# 🧠 الخلاصة
+
+احفظها كالتالي:
+
+```text
+Strategy = Choose an Algorithm
+```
+
+عندك:
+
+```text
+        Context
+           ↓
+       Strategy
+           ↑
+    ┌──────┼──────┐
+    ↓      ↓      ↓
+    A      B      C
+```
+
+والفكرة الأساسية:
+
+> **Define a family of algorithms, encapsulate each one, and make them interchangeable.**
+
+ 
+**أهم كلمة لـ Strategy في الـ Interview: `Interchangeable Algorithms`.**
+
+
