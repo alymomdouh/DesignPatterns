@@ -1745,4 +1745,386 @@ Client
 ودي أهم فكرة فيه: **Facade لا يجعل النظام أبسط من الداخل؛ هو يجعل التعامل معه أبسط من الخارج.**
 
 
+ ###  2.5   Proxy Pattern  
 
+أكيد. **Proxy Pattern** من الـ **Structural Design Patterns**، وهو قريب جدًا من Decorator في الشكل، لكن **الهدف مختلف**.
+
+
+
+الـ **Proxy** هو Object يعمل كـ **بديل أو وسيط (substitute)** عن Object آخر.
+
+> **Proxy provides a surrogate or placeholder for another object to control access to it.**
+
+يعني بدل ما الـ Client يتعامل مباشرة مع الـ Real Object:
+
+```text
+Client
+  ↓
+Real Object
+```
+
+يصبح:
+
+```text
+Client
+  ↓
+ Proxy
+  ↓
+Real Object
+```
+
+والـ Proxy يمكنه التحكم في الوصول إلى الـ Real Object.
+
+---
+
+# مثال بسيط
+
+لنفترض عندنا:
+
+```csharp
+public interface IVideoService
+{
+    void GetVideo(string name);
+}
+```
+
+والـ Real Object:
+
+```csharp
+public class RealVideoService : IVideoService
+{
+    public void GetVideo(string name)
+    {
+        Console.WriteLine($"Loading video: {name}");
+    }
+}
+```
+
+بدون Proxy:
+
+```csharp
+IVideoService service = new RealVideoService();
+
+service.GetVideo("movie.mp4");
+```
+
+---
+
+# نضيف Proxy
+
+```csharp
+public class VideoServiceProxy : IVideoService
+{
+    private readonly RealVideoService _realService;
+
+    public VideoServiceProxy()
+    {
+        _realService = new RealVideoService();
+    }
+
+    public void GetVideo(string name)
+    {
+        Console.WriteLine("Checking access...");
+
+        _realService.GetVideo(name);
+    }
+}
+```
+
+الاستخدام:
+
+```csharp
+IVideoService service = new VideoServiceProxy();
+
+service.GetVideo("movie.mp4");
+```
+
+الـ Client يعتقد أنه يتعامل مع:
+
+```text
+IVideoService
+```
+
+لكن فعليًا:
+
+```text
+Client
+  ↓
+VideoServiceProxy
+  ↓
+RealVideoService
+```
+
+---
+
+# لماذا نستخدم Proxy؟
+
+لأننا نريد التحكم في الوصول إلى الـ Real Object.
+
+أشهر الاستخدامات:
+
+### 1. Authorization
+
+```text
+Client
+  ↓
+Authorization Proxy
+  ↓
+Real Service
+```
+
+الـ Proxy يتحقق:
+
+```csharp
+if (!user.IsAuthorized)
+    throw new UnauthorizedAccessException();
+```
+
+---
+
+### 2. Lazy Loading
+
+لا تنشئ الـ Real Object إلا عندما تحتاجه.
+
+```csharp
+public class VideoProxy : IVideoService
+{
+    private RealVideoService? _realService;
+
+    public void GetVideo(string name)
+    {
+        _realService ??= new RealVideoService();
+
+        _realService.GetVideo(name);
+    }
+}
+```
+
+بدلاً من إنشاء الخدمة من البداية:
+
+```text
+Application Start
+       ↓
+   Proxy فقط
+```
+
+وعندما تحتاجها:
+
+```text
+GetVideo()
+    ↓
+Create Real Object
+```
+
+---
+
+### 3. Caching
+
+```text
+Client
+  ↓
+Cache Proxy
+  ↓
+Real Service
+```
+
+لو البيانات موجودة في Cache:
+
+```text
+Return Cache
+```
+
+وإلا:
+
+```text
+Call Real Service
+      ↓
+Save in Cache
+      ↓
+Return Result
+```
+
+---
+
+### 4. Logging
+
+```text
+Client
+  ↓
+Logging Proxy
+  ↓
+Real Service
+```
+
+---
+
+### 5. Remote Proxy
+
+ممكن الـ Real Object يكون موجودًا على Server آخر:
+
+```text
+Client
+   ↓
+Proxy
+   ↓
+Network
+   ↓
+Remote Service
+```
+
+الـ Client يتعامل معه كأنه Object محلي.
+
+---
+
+# أهم أنواع Proxy
+
+| النوع                | الاستخدام                      |
+| -------------------- | ------------------------------ |
+| **Virtual Proxy**    | Lazy Loading                   |
+| **Protection Proxy** | Authorization / Access Control |
+| **Remote Proxy**     | التعامل مع Remote Object       |
+| **Caching Proxy**    | Cache النتائج                  |
+| **Logging Proxy**    | تسجيل العمليات                 |
+
+---
+
+# Proxy vs Decorator
+
+دي أهم مقارنة لأن الاثنين شكلهم متشابه جدًا:
+
+```text
+Client
+  ↓
+Wrapper
+  ↓
+Real Object
+```
+
+لكن الـ **Intent** مختلف.
+
+### Decorator
+
+هدفه:
+
+> **إضافة Behavior**
+
+```text
+Logging
+   ↓
+Service
+```
+
+مثلاً:
+
+```text
+Service
++
+Logging
++
+Caching
+```
+
+---
+
+### Proxy
+
+هدفه:
+
+> **التحكم في Access إلى Object**
+
+```text
+Proxy
+  ↓
+Real Object
+```
+
+مثلاً:
+
+```text
+Authorization
+   ↓
+Service
+```
+
+---
+
+# لكن هناك نقطة مهمة جدًا
+
+أحيانًا **Proxy يمكن أن يبدو وكأنه Decorator**.
+
+مثلاً:
+
+```csharp
+public class LoggingProxy : IService
+{
+    private readonly IService _service;
+
+    public void Execute()
+    {
+        Console.WriteLine("Log");
+
+        _service.Execute();
+    }
+}
+```
+
+شكله نفس Decorator تقريبًا.
+
+الفرق ليس في الـ syntax، وإنما في **النية Intent**:
+
+```text
+Decorator
+→ أريد إضافة مسؤوليات/Behavior للـ Object.
+
+Proxy
+→ أريد التحكم في الوصول إلى الـ Object.
+```
+
+---
+ 
+# مثال مهم في .NET
+
+في عالم .NET ستجد فكرة الـ Proxy كثيرًا مع:
+
+* **Lazy loading**
+* **ORMs مثل EF Core**
+* **Dynamic proxies**
+* **Authorization**
+* **Caching**
+* **Remote service clients**
+
+الفكرة العامة دائمًا:
+
+```text
+                 Same Interface
+                      │
+                      ▼
+Client ─────────► Proxy
+                      │
+                      ▼
+                 Real Object
+```
+
+---
+
+# 🧠 احفظ الـ Structural Patterns التي أخذناها
+
+| Pattern       | احفظها كـ           |
+| ------------- | ------------------- |
+| **Adapter**   | 🔄 Change Interface |
+| **Decorator** | ➕ Add Behavior      |
+| **Composite** | 🌳 Tree             |
+| **Facade**    | 🎯 Simplify         |
+| **Proxy**     | 🛡️ Control Access  |
+
+وأقوى طريقة للتمييز بين **Decorator و Proxy**:
+
+> **Decorator asks: "What extra behavior can I add?"**
+> **Proxy asks: "Should/how can I access the real object?"**
+
+
+ ###  2.6   Chain of Responsibility Pattern 
+ 
+
+ 
+ ###  2.7   Strategy Pattern 
