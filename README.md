@@ -2123,8 +2123,558 @@ Client ─────────► Proxy
 > **Proxy asks: "Should/how can I access the real object?"**
 
 
- ###  2.6   Chain of Responsibility Pattern 
- 
+###  3-Behavioral Patterns
+
+
+ ###  3.1   Chain of Responsibility Pattern 
+  
+
+> عندك Request، وبدل ما تحدد بنفسك مين المسؤول عن معالجته، تمرره في **سلسلة من Handlers**، وكل Handler يقرر: هل أعالجه؟ أم أمرره للذي بعدي؟
+
+الشكل:
+
+```text
+Request
+   ↓
+Handler 1
+   ↓
+Handler 2
+   ↓
+Handler 3
+   ↓
+Handler 4
+```
+
+كل Handler عنده اختيار:
+
+```text
+"أقدر أتعامل مع الطلب؟"
+       │
+   ┌───┴───┐
+  Yes      No
+   ↓        ↓
+ Handle   Next Handler
+```
+
+---
+
+# مثال واقعي: نظام الموافقات
+
+تخيل شركة لديها طلب شراء:
+
+```text
+Purchase Request = 50,000 EGP
+```
+
+والصلاحيات:
+
+```text
+Employee       → حتى 1,000
+Manager        → حتى 10,000
+Director       → حتى 100,000
+CEO            → أكثر من 100,000
+```
+
+بدل أن تعمل:
+
+```csharp
+if (amount <= 1000)
+{
+    // Employee
+}
+else if (amount <= 10000)
+{
+    // Manager
+}
+else if (amount <= 100000)
+{
+    // Director
+}
+else
+{
+    // CEO
+}
+```
+
+يمكننا استخدام **Chain of Responsibility**.
+
+---
+
+# 1. نعمل Request
+
+```csharp
+public class PurchaseRequest
+{
+    public decimal Amount { get; }
+
+    public PurchaseRequest(decimal amount)
+    {
+        Amount = amount;
+    }
+}
+```
+
+---
+
+# 2. نعمل Handler Base
+
+```csharp
+public abstract class Approver
+{
+    protected Approver? Next { get; private set; }
+
+    public void SetNext(Approver next)
+    {
+        Next = next;
+    }
+
+    public abstract void Approve(PurchaseRequest request);
+}
+```
+
+كل Approver لديه:
+
+```csharp
+Next
+```
+
+أي الشخص التالي في السلسلة.
+
+---
+
+# 3. Employee Handler
+
+```csharp
+public class Employee : Approver
+{
+    public override void Approve(PurchaseRequest request)
+    {
+        if (request.Amount <= 1000)
+        {
+            Console.WriteLine("Employee approved the request.");
+        }
+        else
+        {
+            Next?.Approve(request);
+        }
+    }
+}
+```
+
+---
+
+# 4. Manager Handler
+
+```csharp
+public class Manager : Approver
+{
+    public override void Approve(PurchaseRequest request)
+    {
+        if (request.Amount <= 10000)
+        {
+            Console.WriteLine("Manager approved the request.");
+        }
+        else
+        {
+            Next?.Approve(request);
+        }
+    }
+}
+```
+
+---
+
+# 5. Director Handler
+
+```csharp
+public class Director : Approver
+{
+    public override void Approve(PurchaseRequest request)
+    {
+        if (request.Amount <= 100000)
+        {
+            Console.WriteLine("Director approved the request.");
+        }
+        else
+        {
+            Next?.Approve(request);
+        }
+    }
+}
+```
+
+---
+
+# 6. CEO Handler
+
+```csharp
+public class CEO : Approver
+{
+    public override void Approve(PurchaseRequest request)
+    {
+        Console.WriteLine("CEO approved the request.");
+    }
+}
+```
+
+---
+
+# تكوين الـ Chain
+
+```csharp
+var employee = new Employee();
+var manager = new Manager();
+var director = new Director();
+var ceo = new CEO();
+
+employee.SetNext(manager);
+manager.SetNext(director);
+director.SetNext(ceo);
+```
+
+أصبح لدينا:
+
+```text
+Employee
+   ↓
+Manager
+   ↓
+Director
+   ↓
+CEO
+```
+
+---
+
+# إرسال Request
+
+```csharp
+var request = new PurchaseRequest(50000);
+
+employee.Approve(request);
+```
+
+ماذا يحدث؟
+
+```text
+Employee
+   │
+   │ 50000 > 1000
+   ↓
+Manager
+   │
+   │ 50000 > 10000
+   ↓
+Director
+   │
+   │ 50000 <= 100000
+   ↓
+Approve ✅
+```
+
+الناتج:
+
+```text
+Director approved the request.
+```
+
+---
+
+# الفكرة الأساسية
+
+لاحظ أن الـ Client قال فقط:
+
+```csharp
+employee.Approve(request);
+```
+
+ولم يقل:
+
+```csharp
+if (...)
+    employee
+else if (...)
+    manager
+else if (...)
+    director
+```
+
+هو لا يعرف من سيعالج الـ Request.
+
+وهذه نقطة مهمة جدًا:
+
+> **The sender does not need to know which handler will process the request.**
+
+---
+
+# مثال أقرب للـ .NET
+
+من أشهر الأمثلة: **HTTP Middleware Pipeline**.
+
+تخيل:
+
+```text
+HTTP Request
+     ↓
+Authentication
+     ↓
+Authorization
+     ↓
+Logging
+     ↓
+Exception Handling
+     ↓
+Controller
+```
+
+كل Middleware يمكنه:
+
+1. يعمل شيئًا قبل الـ next.
+2. يمرر الطلب للـ next.
+3. يعمل شيئًا بعد رجوع الـ next.
+
+مثل:
+
+```csharp
+public async Task InvokeAsync(
+    HttpContext context,
+    RequestDelegate next)
+{
+    Console.WriteLine("Before");
+
+    await next(context);
+
+    Console.WriteLine("After");
+}
+```
+
+الفكرة قريبة جدًا من Chain of Responsibility:
+
+```text
+Request
+   ↓
+Middleware 1
+   ↓
+Middleware 2
+   ↓
+Middleware 3
+   ↓
+Controller
+```
+
+---
+
+# مثال آخر: Validation
+
+عندك User Registration:
+
+```text
+Request
+   ↓
+Required Fields Handler
+   ↓
+Email Validation Handler
+   ↓
+Password Validation Handler
+   ↓
+Age Validation Handler
+```
+
+كل Handler ممكن:
+
+```text
+Valid?
+ ├── No  → Stop / Reject
+ └── Yes → Next
+```
+
+مثلاً:
+
+```csharp
+public interface IHandler
+{
+    void SetNext(IHandler handler);
+
+    void Handle(Request request);
+}
+```
+
+وهذا الشكل العام جدًا للـ Pattern.
+
+---
+
+# الشكل العام
+
+```text
+              Request
+                 ↓
+        ┌────────────────┐
+        │   Handler 1    │
+        └───────┬────────┘
+                │
+          Can Handle?
+           /       \
+         Yes        No
+          ↓          ↓
+       Handle     Handler 2
+                    │
+                    ↓
+                 Handler 3
+                    │
+                    ↓
+                  ...
+```
+
+---
+
+# هل كل Handlers لازم تعالج الطلب؟
+
+**لا.**
+
+وهنا يوجد شكلان شائعان.
+
+### 1. Handler يعالج الطلب ويتوقف
+
+```text
+Handler 1
+   ↓
+Handler 2
+   ↓
+Handle ✅
+```
+
+ولا يكمل.
+
+### 2. Handler يعالج ثم يكمل
+
+```text
+Handler 1
+   ↓
+Handle
+   ↓
+Handler 2
+   ↓
+Handle
+   ↓
+Handler 3
+```
+
+وهذا يعتمد على تصميم الـ Chain.
+
+---
+
+# مميزات Chain of Responsibility
+
+### 1. يقلل الـ if/else
+
+بدلاً من:
+
+```csharp
+if (...)
+else if (...)
+else if (...)
+else if (...)
+```
+
+توزع المسؤولية على Classes.
+
+### 2. يقلل Coupling
+
+الـ Client لا يعرف:
+
+```text
+مين المسؤول؟
+```
+
+### 3. سهل إضافة Handler
+
+مثلاً عندك:
+
+```text
+Employee
+Manager
+Director
+CEO
+```
+
+وتريد إضافة:
+
+```text
+Vice President
+```
+
+يمكن إضافته للسلسلة بدون تغيير الـ Client.
+
+### 4. يمكن تغيير ترتيب الـ Chain
+
+مثلاً:
+
+```text
+A → B → C
+```
+
+إلى:
+
+```text
+A → C → B
+```
+
+حسب احتياج النظام.
+
+---
+
+# العيوب
+
+مش دايمًا Chain أفضل.
+
+### 1. ممكن الطلب لا يتم التعامل معه
+
+```text
+Handler 1
+   ↓
+Handler 2
+   ↓
+Handler 3
+   ↓
+Nobody handled it ❌
+```
+
+لازم تحدد ماذا يحدث في هذه الحالة.
+
+### 2. Debugging ممكن يكون أصعب
+
+لأنك لا تعرف مباشرة:
+
+```text
+مين هيعالج الطلب؟
+```
+
+لازم تتبع الـ Chain.
+
+### 3. ممكن يكون عندك Chain طويل جدًا
+
+```text
+A → B → C → D → E → F → G → H
+```
+
+فيصبح التنفيذ والتتبع أصعب.
+
+---
+
+وأهم جملة للـ Interview:
+
+> **Chain of Responsibility is a behavioral design pattern that passes a request along a chain of handlers, allowing each handler to decide whether to process the request or pass it to the next handler.**
+
+### الفكرة في سطر واحد:
+
+```text
+Request → Handler → Handler → Handler → ... → Handler
+```
+
+**كل Handler يقول: "أنا أقدر أتعامل معاه؟ نعم → أتعامل. لا → ابعته للي بعدي."**
+
+
+
 
  
- ###  2.7   Strategy Pattern 
+ ###  3.2   Strategy Pattern 
