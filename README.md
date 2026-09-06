@@ -1037,4 +1037,433 @@ OldBankApi
 > **Adapter changes an object's interface so it can work with existing clients, while Decorator keeps the same interface and adds new behavior to the object.**
 
  
+###  2.3   Composite Pattern  
+
+الـ **Composite Pattern** يسمح لك بالتعامل مع:
+
+* **Object واحد (Leaf)**
+* **مجموعة من Objects (Composite)**
+
+بنفس الطريقة.
+
+بمعنى:
+
+> **Treat individual objects and compositions of objects uniformly.**
+
+أو بالعربي:
+
+> أتعامل مع العنصر المفرد والمجموعة التي تحتوي على عناصر بنفس الـ Interface.
+
+---
+
+# مثال واقعي جدًا: File System
+
+تخيل نظام الملفات:
+
+```text
+📁 Documents
+│
+├── 📄 CV.pdf
+├── 📄 Report.docx
+│
+└── 📁 Projects
+    │
+    ├── 📄 Project1.cs
+    └── 📄 Project2.cs
+```
+
+عندنا نوعان من العناصر:
+
+### File
+
+عنصر مفرد:
+
+```text
+CV.pdf
+```
+
+### Folder
+
+يحتوي على عناصر أخرى:
+
+```text
+Documents
+   ├── CV.pdf
+   ├── Report.docx
+   └── Projects
+```
+
+المهم أن الـ Folder يمكن أن يحتوي على:
+
+* Files
+* Folders
+
+وهذا بالضبط هو الـ Composite.
+
+---
+
+# الشكل الأساسي
+
+```text
+             Component
+                 ▲
+          ┌──────┴──────┐
+          │             │
+        Leaf         Composite
+                        │
+                    ┌───┴───┐
+                    │       │
+                  Leaf    Composite
+```
+
+لاحظ أن:
+
+**Composite يحتوي على Component**
+
+وهذه أهم نقطة.
+
+---
+
+# مثال C#
+
+نعمل Interface مشترك:
+
+```csharp
+public interface IFileSystemItem
+{
+    void Display();
+}
+```
+
+## Leaf
+
+الـ File:
+
+```csharp
+public class FileItem : IFileSystemItem
+{
+    private readonly string _name;
+
+    public FileItem(string name)
+    {
+        _name = name;
+    }
+
+    public void Display()
+    {
+        Console.WriteLine($"File: {_name}");
+    }
+}
+```
+
+ده **Leaf** لأنه لا يحتوي على عناصر أخرى.
+
+---
+
+# Composite
+
+نعمل Folder:
+
+```csharp
+public class Folder : IFileSystemItem
+{
+    private readonly string _name;
+
+    private readonly List<IFileSystemItem> _items = new();
+
+    public Folder(string name)
+    {
+        _name = name;
+    }
+
+    public void Add(IFileSystemItem item)
+    {
+        _items.Add(item);
+    }
+
+    public void Remove(IFileSystemItem item)
+    {
+        _items.Remove(item);
+    }
+
+    public void Display()
+    {
+        Console.WriteLine($"Folder: {_name}");
+
+        foreach (var item in _items)
+        {
+            item.Display();
+        }
+    }
+}
+```
+
+لاحظ:
+
+```csharp
+private readonly List<IFileSystemItem> _items;
+```
+
+الـ `Folder` يحتوي على `IFileSystemItem`.
+
+وهذا يعني أنه يستطيع احتواء:
+
+```text
+FileItem
+Folder
+FileItem
+Folder
+...
+```
+
+---
+
+# الاستخدام
+
+```csharp
+var cv = new FileItem("CV.pdf");
+var report = new FileItem("Report.docx");
+
+var project1 = new FileItem("Project1.cs");
+var project2 = new FileItem("Project2.cs");
+
+var projects = new Folder("Projects");
+
+projects.Add(project1);
+projects.Add(project2);
+
+var documents = new Folder("Documents");
+
+documents.Add(cv);
+documents.Add(report);
+documents.Add(projects);
+
+documents.Display();
+```
+
+الناتج:
+
+```text
+Folder: Documents
+File: CV.pdf
+File: Report.docx
+Folder: Projects
+File: Project1.cs
+File: Project2.cs
+```
+
+لاحظ الـ Tree:
+
+```text
+Documents
+├── CV.pdf
+├── Report.docx
+└── Projects
+    ├── Project1.cs
+    └── Project2.cs
+```
+
+---
+
+# أين الـ Composite هنا؟
+
+عندنا:
+
+```text
+IFileSystemItem
+       ▲
+       │
+   ┌───┴────┐
+   │        │
+ File     Folder
+ Leaf    Composite
+```
+
+والـ `Folder` نفسه عبارة عن:
+
+```csharp
+List<IFileSystemItem>
+```
+
+لذلك يمكن أن يحتوي على `File` أو `Folder`.
+
+---
+
+# الميزة المهمة جدًا
+
+بسبب أن الاثنين يطبقون:
+
+```csharp
+IFileSystemItem
+```
+
+نستطيع التعامل معهم بنفس الطريقة.
+
+مثلاً:
+
+```csharp
+IFileSystemItem item;
+```
+
+يمكن أن يكون:
+
+```csharp
+item = new FileItem("CV.pdf");
+```
+
+أو:
+
+```csharp
+item = new Folder("Documents");
+```
+
+وفي الحالتين:
+
+```csharp
+item.Display();
+```
+
+نفس الـ method.
+
+وهذه هي **الفكرة الأساسية للـ Composite Pattern**.
+
+---
+
+# مثال أشهر في Interview: Employee
+
+تخيل شركة:
+
+```text
+CEO
+├── Manager
+│   ├── Developer
+│   └── Developer
+│
+└── Manager
+    ├── Developer
+    └── Designer
+```
+
+الـ Employee العادي = **Leaf**
+
+والـ Manager = **Composite** لأنه يحتوي على Employees.
+
+```csharp
+public interface IEmployee
+{
+    void ShowDetails();
+}
+```
+
+Developer:
+
+```csharp
+public class Developer : IEmployee
+{
+    public void ShowDetails()
+    {
+        Console.WriteLine("Developer");
+    }
+}
+```
+
+Manager:
+
+```csharp
+public class Manager : IEmployee
+{
+    private readonly List<IEmployee> _employees = new();
+
+    public void Add(IEmployee employee)
+    {
+        _employees.Add(employee);
+    }
+
+    public void ShowDetails()
+    {
+        Console.WriteLine("Manager");
+
+        foreach (var employee in _employees)
+        {
+            employee.ShowDetails();
+        }
+    }
+}
+```
+
+الآن:
+
+```csharp
+var manager = new Manager();
+
+manager.Add(new Developer());
+manager.Add(new Developer());
+
+IEmployee employee = manager;
+
+employee.ShowDetails();
+```
+
+الـ Manager نفسه يتعامل كـ `IEmployee`، بالرغم من أنه يحتوي على Employees آخرين.
+
+---
+
+# Composite vs Adapter vs Decorator
+
+| Pattern   | الهدف                                          |
+| --------- | ---------------------------------------------- |
+| Adapter   | جعل Interfaces غير المتوافقة تعمل معًا         |
+| Decorator | إضافة Behavior إلى Object                      |
+| Composite | التعامل مع Object ومجموعة Objects بنفس الطريقة |
+
+احفظها:
+
+```text
+Adapter    → Compatibility
+Decorator  → Add Behavior
+Composite  → Tree / Hierarchy
+```
+
+---
+
+# متى تستخدم Composite؟
+
+غالبًا عندما يكون عندك **Hierarchical Structure** مثل:
+
+* File System
+* Organization / Employees
+* UI Components
+* Menus / Submenus
+* Categories / Subcategories
+* Products / Product Groups
+* HTML DOM
+* Permissions
+* Expressions / Math trees
+
+مثلاً:
+
+```text
+Menu
+├── Home
+├── Products
+│   ├── Phones
+│   ├── Laptops
+│   └── Tablets
+└── About
+```
+
+هنا `Menu` يمكن أن يحتوي على `MenuItem` أو `Menu` آخر، وبالتالي Composite مناسب جدًا.
+
+---
+
+## 🧠 أهم جملة تحفظها للـ Interview
+
+> **Composite Pattern allows you to compose objects into tree structures and treat individual objects and compositions uniformly.**
+
+وبالعربي:
+
+> **الـ Composite يسمح ببناء Tree من Objects، والتعامل مع الـ Object المفرد والمجموعة من Objects بنفس الـ Interface.**
+
+ 
+ 
 
