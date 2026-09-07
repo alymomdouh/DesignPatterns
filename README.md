@@ -3154,3 +3154,343 @@ Strategy = Choose an Algorithm
 **أهم كلمة لـ Strategy في الـ Interview: `Interchangeable Algorithms`.**
 
 
+###  3.3   Template Method Pattern 
+
+
+> نحدد **الخطوات الأساسية للـ Algorithm** في Base Class، ونترك بعض الخطوات للـ Subclasses لكي تحدد تفاصيل تنفيذها.
+
+يعني عندنا Algorithm ثابت:
+
+```text
+Step 1
+Step 2
+Step 3
+Step 4
+```
+
+لكن بعض الخطوات تختلف من Class إلى آخر.
+
+فنضع الهيكل في الـ Base Class:
+
+```text
+        Base Class
+       Template Method
+             │
+      ┌──────┼──────┐
+      ↓      ↓      ↓
+    Step1   Step2   Step3
+              ↑
+        Subclass defines
+```
+
+---
+
+# مثال: تحضير مشروب ☕
+
+تخيل أن عندنا:
+
+* Tea
+* Coffee
+
+الاثنان لهما نفس خطوات التحضير:
+
+```text
+1. Boil Water
+2. Brew
+3. Pour Into Cup
+4. Add Condiments
+```
+
+لكن:
+
+```text
+Tea:
+Brew → Steep tea
+Condiments → Add lemon
+
+Coffee:
+Brew → Drip coffee
+Condiments → Add sugar
+```
+
+إذن الـ **Algorithm نفسه ثابت**، لكن بعض التفاصيل تختلف.
+
+---
+
+# 1. الـ Base Class
+
+```csharp
+public abstract class Beverage
+{
+    public void Prepare()
+    {
+        BoilWater();
+
+        Brew();
+
+        PourIntoCup();
+
+        AddCondiments();
+    }
+
+    private void BoilWater()
+    {
+        Console.WriteLine("Boiling water");
+    }
+
+    protected abstract void Brew();
+
+    private void PourIntoCup()
+    {
+        Console.WriteLine("Pouring into cup");
+    }
+
+    protected abstract void AddCondiments();
+}
+```
+
+لاحظ أهم Method:
+
+```csharp
+public void Prepare()
+```
+
+هذه هي **Template Method**.
+
+هي التي تحدد ترتيب الخطوات:
+
+```text
+BoilWater
+    ↓
+Brew
+    ↓
+PourIntoCup
+    ↓
+AddCondiments
+```
+
+والـ Subclasses لا تستطيع تغيير ترتيب الـ Algorithm.
+
+---
+
+# 2. Tea
+
+```csharp
+public class Tea : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Steeping tea");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Adding lemon");
+    }
+}
+```
+
+---
+
+# 3. Coffee
+
+```csharp
+public class Coffee : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Dripping coffee through filter");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Adding sugar");
+    }
+}
+```
+
+---
+
+# الاستخدام
+
+```csharp
+Beverage tea = new Tea();
+
+tea.Prepare();
+```
+
+الناتج:
+
+```text
+Boiling water
+Steeping tea
+Pouring into cup
+Adding lemon
+```
+
+ولو:
+
+```csharp
+Beverage coffee = new Coffee();
+
+coffee.Prepare();
+```
+
+الناتج:
+
+```text
+Boiling water
+Dripping coffee through filter
+Pouring into cup
+Adding sugar
+```
+
+لاحظ أن:
+
+```csharp
+Prepare()
+```
+
+لم تتغير.
+
+الذي تغير فقط هو:
+
+```text
+Brew()
+AddCondiments()
+```
+
+---
+
+# أين الـ Template Method؟
+
+الـ Template Method هي:
+
+```csharp
+public void Prepare()
+{
+    BoilWater();
+    Brew();
+    PourIntoCup();
+    AddCondiments();
+}
+```
+
+هي **Template** لأنها تحدد الشكل العام للـ Algorithm.
+
+---
+
+# الشكل
+
+```text
+                 Beverage
+                    │
+             Prepare() ← Template
+                    │
+        ┌───────────┴───────────┐
+        ↓                       ↓
+       Tea                    Coffee
+        │                       │
+     Brew()                  Brew()
+     Condiments()            Condiments()
+```
+
+---
+
+# لماذا نستخدمه؟
+
+لنفترض أن عندك 10 أنواع من المشروبات.
+
+كل واحد يعمل:
+
+```text
+Boil Water
+   ↓
+Brew
+   ↓
+Pour
+   ↓
+Add Condiments
+```
+
+لو كل Class كتب العملية بالكامل، ممكن يحصل اختلاف:
+
+```text
+Tea:
+Boil → Brew → Pour → Condiments
+
+Coffee:
+Brew → Boil → Pour → Condiments ❌
+```
+
+أو واحد ينسى خطوة.
+
+الـ Template Method يضمن أن:
+
+> **الـ Algorithm structure ثابت، والـ subclasses تغير التفاصيل فقط.**
+
+---
+
+# Hook Methods
+
+أحيانًا نريد أن تكون هناك خطوة **اختيارية**.
+
+مثلاً:
+
+```csharp
+public abstract class Beverage
+{
+    public void Prepare()
+    {
+        BoilWater();
+        Brew();
+        PourIntoCup();
+
+        if (CustomerWantsCondiments())
+        {
+            AddCondiments();
+        }
+    }
+
+    private void BoilWater()
+    {
+        Console.WriteLine("Boiling water");
+    }
+
+    protected abstract void Brew();
+
+    private void PourIntoCup()
+    {
+        Console.WriteLine("Pouring into cup");
+    }
+
+    protected abstract void AddCondiments();
+
+    protected virtual bool CustomerWantsCondiments()
+    {
+        return true;
+    }
+}
+```
+
+الـ Subclass يمكنه تغيير الـ Hook:
+
+```csharp
+protected override bool CustomerWantsCondiments()
+{
+    return false;
+}
+```
+
+فالـ **Hook** هو Method يوفر نقطة يمكن للـ Subclass أن يغير عندها السلوك، وغالبًا يكون له implementation افتراضي.
+
+---
+
+والجملة الذهبية للـ Interview:
+
+> **Template Method defines the skeleton of an algorithm in a base class and lets subclasses override specific steps without changing the overall algorithm structure.**
+
+وأهم كلمتين:
+
+**Template Method = Inheritance + Fixed Algorithm Structure**.
+
