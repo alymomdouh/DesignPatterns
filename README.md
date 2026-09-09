@@ -3494,3 +3494,323 @@ protected override bool CustomerWantsCondiments()
 
 **Template Method = Inheritance + Fixed Algorithm Structure**.
 
+
+###  3.4   🔄 State Design Pattern
+ 
+
+> **State = Change Behavior When State Changes**
+
+
+الـ Order ممكن يكون:
+
+```text
+Pending → Paid → Shipped → Delivered
+```
+
+وكل حالة لها سلوك مختلف:
+
+* `Pending` → يمكن الدفع.
+* `Paid` → يمكن الشحن.
+* `Shipped` → يمكن التوصيل.
+* `Delivered` → لا يمكن عمل أي شيء آخر.
+
+---
+
+# ❌ المشكلة بدون State Pattern
+
+ممكن تعمل كل شيء داخل `Order`:
+
+```csharp
+public class Order
+{
+    public string Status { get; set; }
+
+    public void Process()
+    {
+        if (Status == "Pending")
+        {
+            Console.WriteLine("Waiting for payment...");
+        }
+        else if (Status == "Paid")
+        {
+            Console.WriteLine("Preparing shipment...");
+        }
+        else if (Status == "Shipped")
+        {
+            Console.WriteLine("Order is on the way...");
+        }
+        else if (Status == "Delivered")
+        {
+            Console.WriteLine("Order already delivered.");
+        }
+    }
+}
+```
+
+المشكلة أن الـ `Order` بدأ يحتوي على منطق خاص بكل State.
+
+ومع زيادة الحالات:
+
+```text
+Pending
+Paid
+Shipped
+Delivered
+Cancelled
+Returned
+Refunded
+...
+```
+
+الـ `if/else` سيصبح كبيرًا جدًا.
+
+---
+
+# ✅ الحل باستخدام State Pattern
+
+ننشئ Interface يمثل الـ State:
+
+```csharp
+public interface IOrderState
+{
+    void Process(Order order);
+}
+```
+
+ثم كل State يكون له Class خاص به.
+
+### Pending State
+
+```csharp
+public class PendingState : IOrderState
+{
+    public void Process(Order order)
+    {
+        Console.WriteLine("Waiting for payment...");
+
+        order.SetState(new PaidState());
+    }
+}
+```
+
+### Paid State
+
+```csharp
+public class PaidState : IOrderState
+{
+    public void Process(Order order)
+    {
+        Console.WriteLine("Preparing shipment...");
+
+        order.SetState(new ShippedState());
+    }
+}
+```
+
+### Shipped State
+
+```csharp
+public class ShippedState : IOrderState
+{
+    public void Process(Order order)
+    {
+        Console.WriteLine("Order is on the way...");
+
+        order.SetState(new DeliveredState());
+    }
+}
+```
+
+### Delivered State
+
+```csharp
+public class DeliveredState : IOrderState
+{
+    public void Process(Order order)
+    {
+        Console.WriteLine("Order already delivered.");
+    }
+}
+```
+
+---
+
+# 🧠 الـ Context
+
+الـ `Order` هنا يسمى **Context**.
+
+هو لا يحتوي على تفاصيل كل State، وإنما يحتفظ بالـ State الحالي ويطلب منه تنفيذ العملية.
+
+```csharp
+public class Order
+{
+    private IOrderState _state;
+
+    public Order()
+    {
+        _state = new PendingState();
+    }
+
+    public void SetState(IOrderState state)
+    {
+        _state = state;
+    }
+
+    public void Process()
+    {
+        _state.Process(this);
+    }
+}
+```
+
+الاستخدام:
+
+```csharp
+var order = new Order();
+
+order.Process();
+order.Process();
+order.Process();
+order.Process();
+```
+
+Output:
+
+```text
+Waiting for payment...
+Preparing shipment...
+Order is on the way...
+Order already delivered.
+```
+
+لاحظ أن:
+
+```csharp
+order.Process();
+```
+
+نفس الـ method، لكن **السلوك تغير حسب الـ State الحالي**.
+
+---
+
+# 🔥 شكل الـ Pattern
+
+```text
+                ┌─────────────────┐
+                │      Order      │
+                │    Context      │
+                └────────┬────────┘
+                         │
+                         │ Current State
+                         ▼
+                ┌─────────────────┐
+                │ IOrderState     │
+                │                 │
+                │ + Process()     │
+                └────────┬────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+ │ PendingState │ │  PaidState   │ │ ShippedState │
+ └──────────────┘ └──────────────┘ └──────────────┘
+```
+
+والـ State نفسه يستطيع الانتقال إلى State آخر:
+
+```text
+Pending
+   │
+   ▼
+Paid
+   │
+   ▼
+Shipped
+   │
+   ▼
+Delivered
+```
+
+---
+
+# 🎯 مثال أشهر في الـ .NET
+
+تخيل **Document Workflow**:
+
+```text
+Draft
+  ↓
+Submitted
+  ↓
+UnderReview
+  ↓
+Approved
+  ↓
+Published
+```
+
+كل State له عمليات مختلفة.
+
+مثلاً:
+
+### Draft
+
+```csharp
+public class DraftState : IDocumentState
+{
+    public void Submit(Document document)
+    {
+        Console.WriteLine("Document submitted.");
+
+        document.SetState(new UnderReviewState());
+    }
+
+    public void Approve(Document document)
+    {
+        Console.WriteLine("Cannot approve a draft.");
+    }
+}
+```
+
+بينما:
+
+```csharp
+public class UnderReviewState : IDocumentState
+{
+    public void Approve(Document document)
+    {
+        Console.WriteLine("Document approved.");
+
+        document.SetState(new ApprovedState());
+    }
+}
+```
+
+وهذا مفيد جدًا في الأنظمة التي فيها **Workflow**.
+
+---
+ 
+---
+
+## 🧠 احفظها للـ Interview
+
+> **State Pattern allows an object to change its behavior when its internal state changes, by encapsulating state-specific behavior into separate state classes.**
+
+وبالعربي:
+
+> **State Pattern بيخلي الـ Object يغير سلوكه تلقائيًا حسب الـ State الحالي، عن طريق فصل سلوك كل State في Class مستقل.**
+
+### أسهل طريقة تفتكره:
+
+**State = Workflow / Lifecycle / Behavior depends on current state**
+
+مثال تحفظه:
+
+```text
+Order
+
+Pending → Paid → Shipped → Delivered
+```
+
+**لو شفت `switch` كبير على `Status` → فكر في State Pattern.**
+
