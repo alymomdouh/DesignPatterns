@@ -4379,4 +4379,507 @@ Observer = Notify Changes
 
 **Subscribe → Unsubscribe → Notify → Update → One-to-Many → Event**
 
+###  3.6   🤝 Mediator Design Pattern
+
+الـ **Mediator Pattern** هو أحد **Behavioral Design Patterns**، وفكرته الأساسية هي:
+
+> **Mediator = Centralize Communication**
+
+بدل ما كل Object يتواصل مباشرة مع كل Objects الأخرى، نخلي بينهم **Mediator** مسؤول عن تنظيم التواصل.
+
+---
+
+# ❌ المشكلة بدون Mediator
+
+تخيل عندك نظام Checkout:
+
+```text id="z2qv1e"
+OrderService
+     ↕
+PaymentService
+     ↕
+InventoryService
+     ↕
+ShippingService
+     ↕
+NotificationService
+```
+
+لو كل Service يعرف الخدمات الأخرى، سيصبح عندنا **High Coupling**.
+
+مثلاً:
+
+```csharp id="xv1d9q"
+public class OrderService
+{
+    private PaymentService _payment;
+    private InventoryService _inventory;
+    private ShippingService _shipping;
+    private NotificationService _notification;
+}
+```
+
+ثم `PaymentService` يحتاج `NotificationService`، و`InventoryService` يحتاج `OrderService`... وهكذا.
+
+يبدأ النظام يتحول إلى:
+
+```text id="0xqz6c"
+A ↔ B
+A ↔ C
+A ↔ D
+B ↔ C
+B ↔ D
+C ↔ D
+```
+
+وده يجعل التغيير والاختبار والصيانة أصعب.
+
+---
+
+# ✅ الحل: Mediator
+
+نضع Object في المنتصف:
+
+```text id="zuj7zi"
+                Mediator
+             ┌────────────┐
+             │            │
+             └─────┬──────┘
+                   │
+       ┌───────────┼───────────┐
+       ▼           ▼           ▼
+   Component A  Component B  Component C
+```
+
+الـ Components لا تتواصل مع بعضها مباشرة.
+
+كل Component يتواصل مع الـ Mediator:
+
+```text id="q0n7eu"
+Component A ──→ Mediator ──→ Component B
+Component B ──→ Mediator ──→ Component C
+Component C ──→ Mediator ──→ Component A
+```
+
+---
+
+# 🎯 مثال بسيط جدًا: Chat Room
+
+تخيل Chat Room فيها:
+
+```text id="r0c1v2"
+Ahmed
+Mohamed
+Ali
+```
+
+بدون Mediator:
+
+```text id="1x3h4n"
+Ahmed ↔ Mohamed
+Ahmed ↔ Ali
+Mohamed ↔ Ali
+```
+
+كل User يحتاج معرفة كل User آخر.
+
+مع Mediator:
+
+```text id="b9j2k0"
+Ahmed ───┐
+Mohamed ─┼──→ ChatRoom ──→ Users
+Ali ─────┘
+```
+
+الـ `ChatRoom` هو الـ **Mediator**.
+
+---
+
+# 🧑‍💻 C# Example
+
+## 1. Mediator Interface
+
+```csharp id="w8s7fd"
+public interface IChatMediator
+{
+    void SendMessage(string message, User sender);
+    void RegisterUser(User user);
+}
+```
+
+---
+
+## 2. User
+
+```csharp id="5l0c9x"
+public class User
+{
+    private readonly IChatMediator _mediator;
+
+    public string Name { get; }
+
+    public User(string name, IChatMediator mediator)
+    {
+        Name = name;
+        _mediator = mediator;
+    }
+
+    public void Send(string message)
+    {
+        _mediator.SendMessage(message, this);
+    }
+
+    public void Receive(string message)
+    {
+        Console.WriteLine($"{Name} received: {message}");
+    }
+}
+```
+
+لاحظ أن `User` لا يعرف المستخدمين الآخرين.
+
+هو يعرف فقط:
+
+```csharp id="6k8s2p"
+IChatMediator
+```
+
+---
+
+# 🏠 ChatRoom — Concrete Mediator
+
+```csharp id="v7r2me"
+public class ChatRoom : IChatMediator
+{
+    private readonly List<User> _users = new();
+
+    public void RegisterUser(User user)
+    {
+        _users.Add(user);
+    }
+
+    public void SendMessage(string message, User sender)
+    {
+        foreach (var user in _users)
+        {
+            if (user != sender)
+            {
+                user.Receive($"{sender.Name}: {message}");
+            }
+        }
+    }
+}
+```
+
+---
+
+# 🚀 الاستخدام
+
+```csharp id="k6m3tq"
+var chatRoom = new ChatRoom();
+
+var ahmed = new User("Ahmed", chatRoom);
+var mohamed = new User("Mohamed", chatRoom);
+var ali = new User("Ali", chatRoom);
+
+chatRoom.RegisterUser(ahmed);
+chatRoom.RegisterUser(mohamed);
+chatRoom.RegisterUser(ali);
+
+ahmed.Send("Hello everyone!");
+```
+
+Output:
+
+```text id="6w3x5m"
+Mohamed received: Ahmed: Hello everyone!
+Ali received: Ahmed: Hello everyone!
+```
+
+لاحظ:
+
+**Ahmed لا يعرف Mohamed أو Ali.**
+
+هو فقط يقول:
+
+```csharp id="r4v8nd"
+_mediator.SendMessage(...)
+```
+
+والـ Mediator يقرر ماذا يحدث.
+
+---
+
+# 🔥 مثال أهم في .NET Architecture
+
+Mediator Pattern يظهر بشكل واضح جدًا في تطبيقات الـ **CQRS**.
+
+مثلاً عندك:
+
+```text id="8z3j4a"
+Controller
+    │
+    ▼
+Mediator
+    │
+    ▼
+CreateOrderHandler
+    │
+    ├── OrderRepository
+    ├── PaymentService
+    └── NotificationService
+```
+
+بدل Controller يعرف الـ Handler مباشرة:
+
+```csharp id="h3n6v8"
+public class OrdersController : ControllerBase
+{
+    private readonly CreateOrderHandler _handler;
+
+    public async Task<IActionResult> Create(CreateOrderCommand command)
+    {
+        await _handler.Handle(command);
+
+        return Ok();
+    }
+}
+```
+
+يمكن:
+
+```csharp id="j2x7pd"
+public class OrdersController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public async Task<IActionResult> Create(
+        CreateOrderCommand command)
+    {
+        await _mediator.Send(command);
+
+        return Ok();
+    }
+}
+```
+
+وهنا الـ Controller لا يحتاج معرفة `CreateOrderHandler`.
+
+---
+
+# ⭐ MediatR
+
+في عالم .NET يوجد Library شهيرة جدًا مبنية حول فكرة **Mediator** وهي:
+
+**MediatR**
+
+الفكرة:
+
+```text id="9h4k2m"
+Controller
+    │
+    │ Send(Command)
+    ▼
+ IMediator
+    │
+    ▼
+ Handler
+```
+
+مثلاً:
+
+```csharp id="a4n7cs"
+public record CreateOrderCommand(
+    int CustomerId,
+    decimal Amount
+);
+```
+
+والـ Handler:
+
+```csharp id="c8m2vf"
+public class CreateOrderHandler
+    : IRequestHandler<CreateOrderCommand>
+{
+    public async Task Handle(
+        CreateOrderCommand request,
+        CancellationToken cancellationToken)
+    {
+        // Create order
+    }
+}
+```
+
+والـ Controller:
+
+```csharp id="d5q1rx"
+[HttpPost]
+public async Task<IActionResult> Create(
+    CreateOrderCommand command)
+{
+    await _mediator.Send(command);
+
+    return Ok();
+}
+```
+
+فالـ Controller لا يعرف الـ Handler.
+
+---
+
+# 🧠 Mediator vs Observer
+
+الاثنين ممكن يحصل بينهم لخبطة في الـ Interview.
+
+### Observer
+
+التركيز على:
+
+> **Notification**
+
+```text id="w3j9ka"
+Subject
+  │
+  ├──→ Observer 1
+  ├──→ Observer 2
+  └──→ Observer 3
+```
+
+الـ Subject يقول:
+
+> "حدث تغيير، سأخبر المشتركين."
+
+---
+
+### Mediator
+
+التركيز على:
+
+> **Communication / Coordination**
+
+```text id="p6c2mz"
+Component A
+      │
+      ▼
+   Mediator
+      │
+      ▼
+Component B
+```
+
+الـ Mediator يقول:
+
+> "أنا سأدير التواصل بين الـ Components."
+
+---
+
+# 🧠 Mediator vs Facade
+
+أيضًا مهم جدًا.
+
+| Mediator                      | Facade                         |
+| ----------------------------- | ------------------------------ |
+| ينظم Communication            | يبسط Interface                 |
+| Components تتواصل من خلاله    | Client يتعامل مع واجهة بسيطة   |
+| يركز على العلاقات بين Objects | يركز على إخفاء تعقيد Subsystem |
+| Behavioral                    | Structural                     |
+
+مثلاً:
+
+### Facade
+
+```text id="v3m6q1"
+Client
+  │
+  ▼
+OrderFacade
+  │
+  ├── Payment
+  ├── Inventory
+  ├── Shipping
+  └── Notification
+```
+
+الـ Client يريد **واجهة بسيطة**.
+
+### Mediator
+
+```text id="c8r2n5"
+Component A ──┐
+Component B ──┼──→ Mediator
+Component C ──┘
+```
+
+الـ Mediator ينظم **التواصل بينهم**.
+
+---
+
+# ⚠️ عيب Mediator
+
+أكبر مشكلة ممكن تحصل:
+
+### God Object
+
+لو كل الـ business logic بدأ يتحط داخل الـ Mediator:
+
+```text id="p2v7sa"
+Mediator
+ ├── 500 lines
+ ├── 100 conditions
+ ├── Payment logic
+ ├── Order logic
+ ├── Shipping logic
+ └── Notification logic
+```
+
+هنا أنت نقلت الـ complexity من الـ Components إلى Mediator واحد.
+
+لذلك الـ Mediator المفروض **ينظم التواصل** وليس يصبح مكانًا لكل الـ business logic.
+
+---
+
+# 🎯 متى أستخدم Mediator؟
+
+استخدمه عندما:
+
+* عندك Objects كثيرة تتواصل مع بعضها.
+* الـ Coupling بينهم أصبح عاليًا.
+* تريد أن تجعل الـ Components لا تعرف بعضها.
+* عندك Workflow/coordination معقد.
+* تريد فصل الـ Controllers عن الـ Handlers في CQRS.
+
+---
+
+# 🧠 إجابة Interview جاهزة
+
+**Q: What is Mediator Design Pattern?**
+
+> **Mediator Pattern defines an object that encapsulates how a set of objects interact with each other, reducing direct dependencies between them.**
+
+بالعربي:
+
+> **Mediator Pattern بيحط Object في المنتصف مسؤول عن تنظيم التواصل بين مجموعة من Objects، وبالتالي يقلل الـ Coupling بينهم.**
+
+### احفظها كده:
+
+```text
+Mediator = Communication Hub
+```
+
+أو:
+
+> **Don't talk to each other — talk through the Mediator.**
+
+وفي الـ .NET/CQRS:
+
+```text
+Controller
+    ↓
+IMediator
+    ↓
+Command/Query Handler
+```
+
+**وده من أهم استخدامات Mediator اللي أنصحك تكون فاهمه كويس جدًا في Interview الـ .NET.**
+
 
