@@ -3814,3 +3814,569 @@ Pending → Paid → Shipped → Delivered
 
 **لو شفت `switch` كبير على `Status` → فكر في State Pattern.**
 
+###  3.5   👀 Observer Design Pattern
+
+
+الـ **Observer Pattern** هو أحد **Behavioral Design Patterns**، ويُستخدم عندما يكون عندك **Object يتغير**، وتريد أن يتم **إبلاغ مجموعة من Objects تلقائيًا** بهذا التغيير.
+
+ببساطة:
+
+> **Observer = One-to-Many Notification**
+
+يعني:
+
+```text
+        Subject
+           │
+     ┌─────┼─────┐
+     ▼     ▼     ▼
+ Observer Observer Observer
+```
+
+عندما يحدث تغيير في الـ `Subject`، كل الـ `Observers` يتم إخطارهم.
+
+---
+
+# 🎯 مثال واقعي
+
+تخيل أنك مشترك في **YouTube Channel**.
+
+القناة هي:
+
+```text
+Subject
+```
+
+وأنت والمشتركين الآخرون:
+
+```text
+Observers
+```
+
+عندما تنشر القناة فيديو جديد:
+
+```text
+YouTube Channel
+      │
+      ├──→ User 1 🔔
+      ├──→ User 2 🔔
+      ├──→ User 3 🔔
+      └──→ User 4 🔔
+```
+
+القناة لا تحتاج أن تعرف تفاصيل كل User، فقط تعرف أن عندها مجموعة من Observers وتقوم بإبلاغهم.
+
+---
+
+# ❌ المشكلة بدون Observer
+
+مثلاً عندنا Stock:
+
+```csharp
+public class Stock
+{
+    public decimal Price { get; private set; }
+
+    public void ChangePrice(decimal newPrice)
+    {
+        Price = newPrice;
+
+        // Notify Email
+        // Notify SMS
+        // Update Dashboard
+        // Send Notification
+        // Update Mobile App
+    }
+}
+```
+
+مع الوقت يصبح الـ `Stock` مسؤولًا عن أشياء كثيرة:
+
+```text
+Stock
+ ├── Email
+ ├── SMS
+ ├── Dashboard
+ ├── Mobile App
+ └── Logging
+```
+
+وده يخالف **Single Responsibility Principle** ويعمل coupling عالي.
+
+---
+
+# ✅ الحل باستخدام Observer
+
+نقسم الموضوع إلى:
+
+### Subject
+
+هو الـ Object الذي تتغير حالته.
+
+```csharp
+public interface ISubject
+{
+    void Subscribe(IObserver observer);
+    void Unsubscribe(IObserver observer);
+    void Notify();
+}
+```
+
+### Observer
+
+أي Object يريد معرفة التغييرات.
+
+```csharp
+public interface IObserver
+{
+    void Update(decimal price);
+}
+```
+
+---
+
+# 🏗️ Stock — Subject
+
+```csharp
+public class Stock : ISubject
+{
+    private readonly List<IObserver> _observers = new();
+
+    public decimal Price { get; private set; }
+
+    public void Subscribe(IObserver observer)
+    {
+        _observers.Add(observer);
+    }
+
+    public void Unsubscribe(IObserver observer)
+    {
+        _observers.Remove(observer);
+    }
+
+    public void ChangePrice(decimal newPrice)
+    {
+        Price = newPrice;
+
+        Notify();
+    }
+
+    public void Notify()
+    {
+        foreach (var observer in _observers)
+        {
+            observer.Update(Price);
+        }
+    }
+}
+```
+
+لاحظ:
+
+```csharp
+Notify();
+```
+
+كلما تغير السعر، يتم إخطار كل الـ Observers.
+
+---
+
+# 👤 Observer 1 — Email
+
+```csharp
+public class EmailNotifier : IObserver
+{
+    public void Update(decimal price)
+    {
+        Console.WriteLine(
+            $"Email: Stock price changed to {price}");
+    }
+}
+```
+
+### Observer 2 — SMS
+
+```csharp
+public class SmsNotifier : IObserver
+{
+    public void Update(decimal price)
+    {
+        Console.WriteLine(
+            $"SMS: Stock price changed to {price}");
+    }
+}
+```
+
+### Observer 3 — Dashboard
+
+```csharp
+public class Dashboard : IObserver
+{
+    public void Update(decimal price)
+    {
+        Console.WriteLine(
+            $"Dashboard updated: {price}");
+    }
+}
+```
+
+---
+
+# 🚀 الاستخدام
+
+```csharp
+var stock = new Stock();
+
+var email = new EmailNotifier();
+var sms = new SmsNotifier();
+var dashboard = new Dashboard();
+
+stock.Subscribe(email);
+stock.Subscribe(sms);
+stock.Subscribe(dashboard);
+
+stock.ChangePrice(150);
+```
+
+Output:
+
+```text
+Email: Stock price changed to 150
+SMS: Stock price changed to 150
+Dashboard updated: 150
+```
+
+---
+
+# 🔥 Unsubscribe
+
+الميزة المهمة أن الـ Observer يستطيع إلغاء الاشتراك:
+
+```csharp
+stock.Unsubscribe(sms);
+
+stock.ChangePrice(160);
+```
+
+النتيجة:
+
+```text
+Email: Stock price changed to 160
+Dashboard updated: 160
+```
+
+الـ SMS لم يعد يستقبل Notifications.
+
+---
+
+# 🧠 شكل الـ Pattern
+
+```text
+                    Subject
+                  ┌───────────┐
+                  │   Stock   │
+                  ├───────────┤
+                  │ Subscribe │
+                  │ Unsubscribe
+                  │ Notify    │
+                  └─────┬─────┘
+                        │
+             List<IObserver>
+                        │
+        ┌───────────────┼───────────────┐
+        ▼               ▼               ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│EmailNotifier │ │ SmsNotifier  │ │  Dashboard   │
+└──────────────┘ └──────────────┘ └──────────────┘
+        │               │               │
+        └───────────────┼───────────────┘
+                        ▼
+                     Update()
+```
+
+---
+
+# ⭐ Push vs Pull
+
+هناك طريقتان شائعتان في Observer.
+
+### Push
+
+الـ Subject يرسل البيانات مباشرة:
+
+```csharp
+observer.Update(price);
+```
+
+يعني:
+
+```text
+Subject
+   │
+   └──→ Update(Price)
+```
+
+---
+
+### Pull
+
+الـ Subject يقول فقط:
+
+```csharp
+observer.Update();
+```
+
+والـ Observer يرجع للـ Subject للحصول على البيانات.
+
+```text
+Subject
+   │
+   └──→ Update()
+          │
+          └──→ Get current data
+```
+
+في الـ C# example السابق استخدمنا **Push Model**.
+
+---
+
+# 💡 مثال مهم جدًا في .NET
+
+في C# يوجد مفهوم مشابه جاهز:
+
+```csharp
+IObservable<T>
+IObserver<T>
+```
+
+مثلاً:
+
+```csharp
+public class Stock : IObservable<decimal>
+{
+    private readonly List<IObserver<decimal>> _observers = new();
+
+    public IDisposable Subscribe(IObserver<decimal> observer)
+    {
+        _observers.Add(observer);
+
+        return new Unsubscriber(_observers, observer);
+    }
+
+    public void ChangePrice(decimal price)
+    {
+        foreach (var observer in _observers)
+        {
+            observer.OnNext(price);
+        }
+    }
+}
+```
+
+وهذا من أشهر تطبيقات فكرة **Observer** في .NET.
+
+---
+
+# 🌐 مثال في Web Applications
+
+Observer Pattern مفيد جدًا في الأنظمة التي تحتوي على Events/Notifications:
+
+```text
+Order Status Changed
+        │
+        ▼
+      Order
+        │
+        ├──→ Email Service
+        ├──→ SMS Service
+        ├──→ Notification Service
+        ├──→ Audit Service
+        └──→ Analytics Service
+```
+
+مثلاً عندما يصبح الطلب:
+
+```text
+Pending → Paid
+```
+
+عدة Components تحتاج أن تعرف:
+
+```text
+Email → Send confirmation
+SMS → Send SMS
+Notification → Push notification
+Audit → Save event
+```
+
+بدل أن يكون `OrderService` مرتبطًا بكل هذه الخدمات، يمكن استخدام **Events / Observer-like mechanism**.
+
+---
+
+# 🔥 Observer vs Pub/Sub
+
+مهم جدًا في الـ Interviews.
+
+### Observer
+
+عادةً:
+
+```text
+Subject
+   │
+   ├── Observer 1
+   ├── Observer 2
+   └── Observer 3
+```
+
+الـ Subject يعرف الـ Observers.
+
+### Pub/Sub
+
+عادةً يوجد وسيط:
+
+```text
+Publisher
+    │
+    ▼
+Message Broker
+    │
+    ├── Subscriber 1
+    ├── Subscriber 2
+    └── Subscriber 3
+```
+
+فالـ Publisher والـ Subscribers لا يحتاجون معرفة بعضهم مباشرة.
+
+مثال:
+
+```text
+RabbitMQ
+Kafka
+Azure Service Bus
+```
+
+---
+
+# 🔥 Observer vs Mediator
+
+| Observer                       | Mediator                             |
+| ------------------------------ | ------------------------------------ |
+| Notify many interested objects | Coordinate multiple objects          |
+| One-to-Many                    | غالبًا Many-to-Many                  |
+| Focus على notification         | Focus على communication/coordination |
+| Subject → Observers            | Components → Mediator → Components   |
+
+---
+
+# ⚠️ عيوب Observer
+
+رغم أنه Pattern مفيد، له بعض المشاكل:
+
+### 1. كثرة الـ Observers
+
+قد يصبح من الصعب معرفة من الذي يستقبل Notification.
+
+### 2. ترتيب التنفيذ
+
+لو عندك:
+
+```text
+Observer A
+Observer B
+Observer C
+```
+
+قد تحتاج أن تنتبه لترتيب الإشعارات إذا كانت تعتمد على بعضها.
+
+### 3. Memory Leaks
+
+خصوصًا في التطبيقات التي تعتمد على events إذا لم يتم unsubscribe بشكل صحيح.
+
+---
+
+# 🧩 مثال قريب من شغلك في .NET
+
+تخيل عندك:
+
+```text
+Document
+```
+
+عندما يتم:
+
+```text
+Document Approved
+```
+
+تريد:
+
+```text
+Document
+   │
+   ├──→ Send Email
+   ├──→ Create Audit Log
+   ├──→ Notify User
+   └──→ Update Search Index
+```
+
+بدل:
+
+```csharp
+DocumentService
+    .Approve()
+    .SendEmail()
+    .CreateAuditLog()
+    .NotifyUser()
+    .UpdateSearchIndex();
+```
+
+يمكن نشر Event:
+
+```csharp
+DocumentApprovedEvent
+```
+
+وكل Handler مهتم بالحدث يتعامل معه.
+
+وهذا يجعل النظام أكثر **loosely coupled**.
+
+---
+
+# 🎯 سؤال Interview مهم
+
+**Q: What is Observer Design Pattern?**
+
+إجابة ممتازة:
+
+> **Observer Pattern defines a one-to-many dependency between objects, so when the state of the subject changes, all registered observers are automatically notified.**
+
+بالعربي:
+
+> هو Pattern بيعمل علاقة **One-to-Many** بين Object أساسي ومجموعة Objects أخرى، وعندما يحدث تغيير في الـ Subject يتم إخطار كل الـ Observers تلقائيًا.
+
+---
+
+## 🧠 احفظها بهذه الطريقة
+
+```text
+Observer = Notify Changes
+```
+
+مثال:
+
+```text
+        Stock Price
+             │
+       ┌─────┼─────┐
+       ▼     ▼     ▼
+     Email   SMS  Dashboard
+```
+
+**Subject changes → Observers get notified.**
+
+والـ keywords التي لو رأيتها في Interview تفكر فورًا في Observer:
+
+**Subscribe → Unsubscribe → Notify → Update → One-to-Many → Event**
+
+
